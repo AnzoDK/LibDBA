@@ -185,7 +185,7 @@ std::string DBA::DBAapi::CurlJsonRequest(std::string requestUrl, bool WriteToFil
     else
     {
         /*Error on creation of curl - Prob a libcurl issue*/
-        return "ERROR";
+        return "LibCurl Error - Curl Could not be initilized";
     }
     return *tempString;
 }
