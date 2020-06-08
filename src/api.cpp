@@ -94,7 +94,6 @@ std::string DBA::DBAapi::CurlJsonRequest(std::string requestUrl, bool WriteToFil
     if(curl) 
     {
         struct curl_slist *chunk = NULL;
-        //std::unique_ptr<std::string> httpData(new std::string());
         std::string* responseString = new std::string();
 
         //Adding the custom User-Agent
