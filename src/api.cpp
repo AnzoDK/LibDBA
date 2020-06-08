@@ -154,7 +154,7 @@ std::string DBA::DBAapi::Search(std::string searchText)
                     //While debug is true - let's write the responseString to a file :)
                     std::ofstream of = std::ofstream("responseData.json",std::ios::out);
                     std::cout << "Reponse Written to 'responseData.json'" << std::endl;
-                    of << *tempString;
+                    of << jsonData.toStyledString();
                     of.close();
                 }
                 
