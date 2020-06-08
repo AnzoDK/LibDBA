@@ -356,12 +356,14 @@ public interface DbaRestApiLegacy {
 
 enum ApiVersion {v1/*v1 does not work anymore*/,v2,v3};
 enum ApiAgent {Android,iPhone};
+enum Category{};
 struct ApiSettings
 {
     ApiVersion version;
     ApiAgent agent;
     std::string customKey = "";
     bool debug = 0;
+    std::string currentApiUrl;
 };
 
 class DBAapi
@@ -373,10 +375,15 @@ class DBAapi
         DBAapi(ApiVersion _version, ApiAgent _agent, std::string _customKey);
         DBAapi(ApiVersion _version, ApiAgent _agent, std::string _customKey, bool _debug);
         std::string Search(std::string searchText);
+        std::string SearchInCategory(std::string searchText, Category category);
+        
+        //Saves the current Categories from the api to CurrCat.json on disk
+        void GetCategories();
+        std::string GetCategoryName(Category cat);
         
     private:
-        std::string iphoneUserAgent = "dba/5.9 iPhone 12.1"; /*found by NaY at the forum mentioned below - and is needed to fool the api to allow the lib to access the api - Update: some say that it is not needed, but I have not had any success without*/
-        std::string androidUserAgent = "Android";
+        std::string iphoneUserAgent = "dba/5.9 iPhone 12.1"; 
+        std::string androidUserAgent = "Android"; /*found by NaY at the forum mentioned below - and is needed to fool the api to allow the lib to access the api - Update: some say that it is not needed, but I have not had any success without*/
         std::string androidApiKey = "64424762-f650-450f-909d-08d6d22703fd"; /*Apikey found by decompiling of the DBA app on android - Credit to Unknown poster on http://fas.mide.dk/2011/11/hemmelig-dba-api.html*/
         std::string iphoneApiKey = "3d8cbae-ae89-47bb-a423-08d646555519";
         std::string baseUrl = "https://api.dba.dk/api/";
@@ -392,5 +399,8 @@ class DBAapi
         std::string fullV3Url = "https://api.dba.dk/api/v3/";
         std::string fullV2Url = "https://api.dba.dk/api/v2/";
         ApiSettings apisettings;
+        
+        std::string CurlJsonRequest(std::string requestUrl,bool writeToFile=1);
+        std::string GetApiUrl(ApiVersion ver);
 };
 }

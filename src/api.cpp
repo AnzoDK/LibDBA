@@ -19,6 +19,7 @@ DBA::DBAapi::DBAapi()
     apisettings = ApiSettings();
     apisettings.agent = ApiAgent::Android;
     apisettings.version = ApiVersion::v2;
+    apisettings.currentApiUrl = fullV2Url;
 }
 
 DBA::DBAapi::DBAapi(ApiVersion _version, ApiAgent _agent)
@@ -26,6 +27,7 @@ DBA::DBAapi::DBAapi(ApiVersion _version, ApiAgent _agent)
     apisettings = ApiSettings();
     apisettings.agent = _agent;
     apisettings.version = _version;
+    apisettings.currentApiUrl = GetApiUrl(_version);
 }
 
 DBA::DBAapi::DBAapi(ApiVersion _version, ApiAgent _agent, bool _debug)
@@ -34,6 +36,7 @@ DBA::DBAapi::DBAapi(ApiVersion _version, ApiAgent _agent, bool _debug)
     apisettings.agent = _agent;
     apisettings.version = _version;
     apisettings.debug = _debug;
+    apisettings.currentApiUrl = GetApiUrl(_version);
 }
 
 DBA::DBAapi::DBAapi(ApiVersion _version, ApiAgent _agent, std::string _customKey)
@@ -42,6 +45,7 @@ DBA::DBAapi::DBAapi(ApiVersion _version, ApiAgent _agent, std::string _customKey
     apisettings.agent = _agent;
     apisettings.version = _version;
     apisettings.customKey = _customKey;
+    apisettings.currentApiUrl = GetApiUrl(_version);
 }
 
 DBA::DBAapi::DBAapi(ApiVersion _version, ApiAgent _agent, std::string _customKey, bool _debug)
@@ -51,8 +55,38 @@ DBA::DBAapi::DBAapi(ApiVersion _version, ApiAgent _agent, std::string _customKey
     apisettings.version = _version;
     apisettings.customKey = _customKey;
     apisettings.debug = _debug;
+    apisettings.currentApiUrl = GetApiUrl(_version);
 }
 std::string DBA::DBAapi::Search(std::string searchText)
+{
+    std::string url = apisettings.currentApiUrl + "taxonomy/search?=" + searchText + "&format=json";
+    return CurlJsonRequest(url);
+}
+std::string DBA::DBAapi::SearchInCategory(std::string searchText, DBA::Category category)
+{
+    return "Not Implimented";
+}
+//A function to get the localized string instead of the enum name
+std::string DBA::DBAapi::GetCategoryName(Category cat)
+{
+    switch(static_cast<int>(cat))
+    {
+        default:
+            return "Unknown or unimplimented category";
+        break;
+    }
+}
+
+void DBA::DBAapi::GetCategories()
+{
+    std::string url = apisettings.currentApiUrl + "taxonomy?format=json";
+    std::ofstream out = std::ofstream("CurrCat.json",std::ios::out);
+    out << CurlJsonRequest(url,0);
+    out.close();
+    std::cout << "Saved to CurrCat.json" << std::endl;
+}
+
+std::string DBA::DBAapi::CurlJsonRequest(std::string requestUrl, bool WriteToFile)
 {
     CURL *curl;
     CURLcode res;
@@ -87,28 +121,12 @@ std::string DBA::DBAapi::Search(std::string searchText)
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, chunk);
 
         
-        std::string searchUrl = "";
         
         //some api calls require v2 and some v3 - this section is made so that if search (taxonomy/search?q=) becomes v3, it will be easier to change.
         //api calls that require v3 will always go v3 no matter the setting. So most api calls will work if the setting is v2
-        
-        switch(static_cast<int>(apisettings.version))
-        {
-            case 0:
-                //v1 does not work anymore - so useless
-            break;
-            
-            case 1:
-                searchUrl = fullV2Url + "taxonomy/search?q="+searchText+"&format=json";
-            break;
-            
-            case 2:
-                searchUrl = fullV3Url + "taxonomy/search?q="+searchText+"&format=json";
-            break;
-        }
 
         //Setting URL
-        curl_easy_setopt(curl, CURLOPT_URL, searchUrl.c_str());
+        curl_easy_setopt(curl, CURLOPT_URL, requestUrl.c_str());
 
         //Setting curl to verbose as this is a debug build
         if(apisettings.debug)
@@ -149,7 +167,7 @@ std::string DBA::DBAapi::Search(std::string searchText)
                 //Formatting the string to be easier to read
                 *tempString = jsonData.toStyledString();
                 
-                if(apisettings.debug)
+                if(apisettings.debug && WriteToFile)
                 {
                     //While debug is true - let's write the responseString to a file :)
                     std::ofstream of = std::ofstream("responseData.json",std::ios::out);
@@ -171,3 +189,30 @@ std::string DBA::DBAapi::Search(std::string searchText)
     }
     return *tempString;
 }
+std::string DBA::DBAapi::GetApiUrl(DBA::ApiVersion ver)
+{
+    std::string apiVerson = std::string();
+    
+    switch(static_cast<int>(ver))
+    {
+        case 0:
+            /*Break as we cant use it*/
+            std::cout << "Useless Api Selected" << std::endl;
+        break;
+        
+        case 1:
+            apiVerson = v2Url;
+        break;
+        
+        case 2:
+            apiVerson = v3Url;
+        break;
+        
+        default:
+            std::cout << "unexpected api version" << std::endl;
+        break;
+    }
+    return baseUrl + apiVerson;
+}
+
+
