@@ -3,3 +3,5 @@ includes/main.h
 dbaSearch
 .kdev4/
 LibDBA.kdev4
+makefile
+responseData.json

@@ -1,5 +1,5 @@
 #include "../includes/api.h"
-std::string tempString = std::string();
+std::string* tempString = new std::string();
     std::size_t callback(
             void* in,
             std::size_t size,
@@ -7,8 +7,8 @@ std::string tempString = std::string();
             void* out)
     {
        
-        tempString.append((char*)in);
-        out = &tempString;
+        tempString->append((char*)in);
+        out = tempString;
         return size * num;
         
     }
@@ -143,11 +143,23 @@ std::string DBA::DBAapi::Search(std::string searchText)
 
             Json::Value jsonData;
             Json::Reader jsonReader;
-            if (jsonReader.parse(*responseString, jsonData))
+            if (jsonReader.parse(*tempString, jsonData))
             {
                 
-                //Some testing
-                tempString = jsonData.toStyledString();
+                //Formatting the string to be easier to read
+                *tempString = jsonData.toStyledString();
+                
+                if(apisettings.debug)
+                {
+                    //While debug is true - let's write the responseString to a file :)
+                    std::ofstream of = std::ofstream("responseData.json",std::ios::out);
+                    std::cout << "Reponse Written to 'responseData.json'" << std::endl;
+                    of << tempString;
+                    of.close();
+                }
+                
+                //Delete the, no longer needed, responseString
+                delete(responseString);
             }
         }
         
@@ -157,5 +169,5 @@ std::string DBA::DBAapi::Search(std::string searchText)
         /*Error on creation of curl - Prob a libcurl issue*/
         return "ERROR";
     }
-    return tempString;
+    return *tempString;
 }
